@@ -5,7 +5,7 @@
 
 #define WIDTH 1000
 #define HEIGHT 1000
-#define MAXSIZE 50
+#define MAXSIZE 100
 using namespace cv;
 using namespace std;
 
@@ -28,7 +28,7 @@ MyVertex minu(MyVertex a, MyVertex b)
 bool isCW(MyVertex i, MyVertex j, MyVertex k)
 {
 	if (((j.x - i.x)*(k.y - i.y) - (k.x - i.x)*(j.y - i.y)) < 0)
-		return true;
+		return true; 
 	else
 		return false;
 }
@@ -54,7 +54,6 @@ int main()
 	}
 
 	Mat background(WIDTH, HEIGHT, CV_8UC3, Scalar(255, 255, 255));
-	//namedWindow("img");
 	for (int i = 0; i < MAXSIZE; i++)
 	{
 		Point center = Point(points[i].x, points[i].y);
@@ -68,13 +67,18 @@ int main()
 	vector<MyVertex> ::iterator citer1;
 	vector<MyVertex> ::iterator citer2;
 	vector<MyVertex> ::iterator it;
+	vector<MyVertex> ::iterator tmpit;
+	vector<MyVertex> count;
+	bool isbegin = false;
 	int delt = 0;
 	vector<MyVertex> ::iterator startpos;
 	bool isfirst = true;
 	for (piter = points.begin()+3; piter != points.end(); piter++)
 	{
+		
 		for (citer1 = convex.begin(); citer1 != convex.end(); citer1++)
 		{
+			
 			if (citer1 != convex.end() - 1)
 			{
 				citer2 = citer1+1;
@@ -82,13 +86,9 @@ int main()
 			else
 				citer2 = convex.begin();
 			
-			if ( citer1!=convex.end()&& citer2!=convex.end()&& isCW(*citer1, *citer2, *piter))//minu(*citer2,*citer1),minu(*piter, *citer2), minu(*citer1, *piter))
+			if ( isCW(*citer1, *citer2, *piter))
 			{
-				/*if (isfirst)
-				{
-					startpos = citer1;
-					isfirst = false;
-				}*/
+
 				delt++;
 				(*citer2).isdeleted = true;
 				
@@ -113,44 +113,52 @@ int main()
 		{
 			for (it = convex.begin(); it != convex.end(); it++)
 			{
-				if ((*it).isdeleted && it!=convex.end()-1 &&!(*(it+1)).isdeleted)
+				if ((*it).isdeleted && it== convex.begin()&& !(*(it+1)).isdeleted)
+				{
+					(*it).isdeleted = false;
+					isbegin = true;
+				}
+				else if ((*it).isdeleted && it != convex.end() - 1 && !(*(it + 1)).isdeleted)
 				{
 					(*it).isdeleted = false;
 				}
-				else if ((*it).isdeleted && it== convex.end()-1 &&!(*convex.begin()).isdeleted)
+				else if ((*it).isdeleted && it== convex.end()-1 && !isbegin)
 				{
 					(*it).isdeleted = false;
 				}
-				if (it == convex.end())
-				{
-					break;
-				}
+
+
 			}
+			isbegin = false;
 			for (it = convex.begin(); it != convex.end();)
 			{
-				if ((*it).isdeleted)
-				{
-					it = convex.erase(it);
-					citer1 = it;
-				}
-				else
-					it++;
-				if (it == convex.end())
-				{
-					break;
-				}
+					if ((*it).isdeleted)
+					{
+						it = convex.erase(it);
+						tmpit = it;
+
+					}
+					
+					else
+				   {
+					   it++;
+				   }
 			}
-			//citer1=convex.erase(startpos + 1, startpos+delt);
-			if(citer1==convex.end())
+			if(tmpit==convex.end())
 			    convex.insert(convex.begin(), *piter);
 			else
-				convex.insert(citer1, *piter);
-			
+				convex.insert(tmpit, *piter);			
 			delt = 0;
-			//isfirst = true;
+
+		}
+		for (it = convex.begin(); it != convex.end(); it++)
+		{
+			(*it).isdeleted = false;
 		}
 
 	}
+
+	//绘制连线
 	for (citer1 = convex.begin(); citer1 != convex.end(); citer1++)
 	{
 		if (citer1 != convex.end() - 1)
@@ -160,22 +168,12 @@ int main()
 		else
 			citer2 = convex.begin();
 		Point a=Point((*citer1).x, (*citer1).y);
-		/*if (citer1 != convex.end() - 1)
-			citer1++;
-		else 
-			citer1 = convex.begin();*/
 		Point b= Point((*citer2).x, (*citer2).y);
 		line(background, a, b, Scalar(0, 0, 255));
-		/*if (citer1 != convex.begin())
-			citer1--;
-		else
-			citer1 = convex.end() - 1;*/
 	}
 	
 
 	imshow("img",background);
 	waitKey(0);
 
-
-	
 }
